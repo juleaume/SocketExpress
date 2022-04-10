@@ -7,22 +7,20 @@
 
     Dialog:
         id: dialog
-        center: root.center
         width: root.width
-        top: root.top
         height: root.height - root.out_text.height
+        top: root.height
 
     Texter:
         id: texter
         x: root.x
-        width: root.width * 5/6
-        height: 50
+        width: root.width - root.send_button.width
+        height: root.send_button.height
 
     Button:
         id: send_button
         x: root.width - self.width
-        width: root.width/6
-
+        width: 100
         text: "Send"
         height: 50
 
