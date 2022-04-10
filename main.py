@@ -1,9 +1,6 @@
-import os
-
 from kivy.app import App
 from kivy.clock import mainthread
 from kivy.event import EventDispatcher
-from kivy.properties import NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
@@ -32,6 +29,7 @@ class SocketExpress(Widget):
     def __init__(self):
         super(SocketExpress, self).__init__()
         self.client = Client(self.message_signal)
+        self.client.address = ("192.168.1.12", 7878)
         # self.message_signal.connect(
         #     lambda: self._update_dialog(self.client.message)
         # )
@@ -54,11 +52,11 @@ class SocketExpress(Widget):
         send_box.add_widget(self.send_button)
         box.add_widget(send_box)
         self.add_widget(box)
-        # self.client.start()
+        self.client.start()
 
     def send_message(self, instance):
         if self.message.text:
-            text = f"[{os.getlogin()}] {self.message.text}"
+            text = f"[{self.client.name}] {self.message.text}\n"
             self.message.text = ''
             self._update_dialog(text)
             self.client.send_message(text)
@@ -70,8 +68,11 @@ class SocketExpress(Widget):
     def _update_dialog(self, text):
         print("got text", text)
         history = self.history.text
-        dialog = f"{history}\n{text}"
+        dialog = f"{history}{text}"
         self.history.text = dialog
+
+    def __del__(self):
+        self.client.is_running = False
 
 
 class SEApp(App):

@@ -1,9 +1,12 @@
+import os
 import socket
 import threading
 from typing import Iterable, Tuple, Union
 
 
 class Client:
+    is_running = True
+
     def __init__(self, signal=None):
         self.socket = socket.socket()
         self._message = ""
@@ -11,6 +14,17 @@ class Client:
         self.signal = signal
         self._ip = ""
         self._port = 9898
+        self._name = os.getlogin()
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if not value == self._name:
+            self.send_message(f"<{self.name} is now {value}>")
+            self._name = value
 
     @property
     def address(self):
@@ -49,7 +63,8 @@ class Client:
     def _run(self):
         self.socket.connect(self.address)
         print("connected to server")
-        while True:
+        self.send_message(f"<{self.name} has entered the chat>")
+        while self.is_running:
             self.message = self.socket.recv(4096).decode()
             if self.signal is not None:
                 self.signal.emit(self.message)
