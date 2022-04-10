@@ -1,8 +1,7 @@
 from kivy.app import App
 from kivy.clock import mainthread
 from kivy.event import EventDispatcher
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
+from kivy.properties import ObjectProperty
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
@@ -20,44 +19,47 @@ class Signal(EventDispatcher):
         self.dispatch('on_trigger', value)
 
     def on_trigger(self, *args):
-        print("I am dispatched", args)
+        pass
+
+
+class Dialog(TextInput):
+    def keyboard_on_textinput(self, window, text):
+        pass
+
+
+class Texter(TextInput):
+    pass
 
 
 class SocketExpress(Widget):
     message_signal = Signal()
+    history = ObjectProperty(None)
+    out_text = ObjectProperty(None)
+    send_button = ObjectProperty(None)
 
     def __init__(self):
         super(SocketExpress, self).__init__()
         self.client = Client(self.message_signal)
-        self.client.address = ("192.168.1.12", 7878)
-        # self.message_signal.connect(
-        #     lambda: self._update_dialog(self.client.message)
-        # )
-
+        self.client.address = ("192.168.1.12", 7979)
         self.message_signal.bind(on_trigger=self.recv_text)
 
-        box = BoxLayout(orientation='vertical')
-        box.size_hint = (None, None)
-        box.width = 500
-        box.height = 500
-        self.history = TextInput()
-        box.add_widget(self.history)
-        send_box = BoxLayout()
-        self.message = TextInput()
-        send_box.add_widget(self.message)
-        send_box.height = 200
-        self.send_button = Button()
-        self.send_button.text = "send"
+        self.out_text.keyboard_on_key_down = self._on_enter_pressed
+
         self.send_button.bind(on_press=self.send_message)
-        send_box.add_widget(self.send_button)
-        box.add_widget(send_box)
-        self.add_widget(box)
         self.client.start()
 
+    def _on_enter_pressed(self, window, keycode, text, modifiers):
+        if keycode[1] == "enter" and "shift" not in modifiers:
+            self.send_message(self.out_text)
+        else:
+            Texter.keyboard_on_key_down(
+                self.out_text, window, keycode, text, modifiers
+            )
+
     def send_message(self, instance):
-        if self.message.text:
-            text = f"[{self.client.name}] {self.message.text}\n"
-            self.message.text = ''
+        if self.out_text.text:
+            text = f"[{self.client.name}] {self.out_text.text}\n"
+            self.out_text.text = ''
             self._update_dialog(text)
             self.client.send_message(text)
 
@@ -66,7 +68,6 @@ class SocketExpress(Widget):
 
     @mainthread
     def _update_dialog(self, text):
-        print("got text", text)
         history = self.history.text
         dialog = f"{history}{text}"
         self.history.text = dialog

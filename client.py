@@ -1,7 +1,7 @@
 import os
 import socket
 import threading
-from typing import Iterable, Tuple, Union
+from typing import Tuple, Union
 
 
 class Client:
@@ -14,7 +14,7 @@ class Client:
         self.signal = signal
         self._ip = ""
         self._port = 9898
-        self._name = os.getlogin()
+        self._name = f"{os.getlogin()}@{socket.gethostname()}"
 
     @property
     def name(self):
@@ -23,7 +23,7 @@ class Client:
     @name.setter
     def name(self, value):
         if not value == self._name:
-            self.send_message(f"<{self.name} is now {value}>")
+            self.send_message(f"<{self.name} is now {value}>\n")
             self._name = value
 
     @property
@@ -48,10 +48,9 @@ class Client:
     def message(self, value):
         if value:
             self._message = value
-            print("message", value)
 
     def start(self):
-        self.reading_thread = threading.Thread(target=self._run)
+        self.reading_thread = threading.Thread(target=self._run, name="Client")
         self.reading_thread.start()
 
     def send_message(self, message: str):
@@ -61,10 +60,17 @@ class Client:
             print("Warning no route to host")
 
     def _run(self):
-        self.socket.connect(self.address)
+        try:
+            self.socket.connect(self.address)
+        except (socket.timeout, ConnectionError):
+            print("Cannot connect to server")
+            return
         print("connected to server")
-        self.send_message(f"<{self.name} has entered the chat>")
+        self.send_message(f"<{self.name} has entered the chat>\n")
         while self.is_running:
             self.message = self.socket.recv(4096).decode()
             if self.signal is not None:
                 self.signal.emit(self.message)
+
+    def __del__(self):
+        self.send_message(f"<{self.name} has left the chat>\n")
