@@ -56,13 +56,13 @@ class Client:
     def send_message(self, message: str):
         try:
             self.socket.send(message.encode())
-        except (socket.timeout, BrokenPipeError, ConnectionError):
+        except (socket.timeout, BrokenPipeError, ConnectionError, OSError):
             print("Warning no route to host")
 
     def _run(self):
         try:
             self.socket.connect(self.address)
-        except (socket.timeout, ConnectionError):
+        except (socket.timeout, ConnectionError, OSError):
             print("Cannot connect to server")
             return
         print("connected to server")

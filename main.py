@@ -1,11 +1,14 @@
 from kivy.app import App
 from kivy.clock import mainthread
+from kivy.core.window import Window
 from kivy.event import EventDispatcher
 from kivy.properties import ObjectProperty
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 from client import Client
+
+Window.softinput_mode = 'below_target'
 
 
 class Signal(EventDispatcher):
@@ -25,6 +28,10 @@ class Signal(EventDispatcher):
 class Dialog(TextInput):
     def keyboard_on_textinput(self, window, text):
         pass
+
+    def set_bottom_text(self):
+        pass
+    # add a way to push the text to down of the window
 
 
 class Texter(TextInput):
@@ -71,6 +78,7 @@ class SocketExpress(Widget):
         history = self.history.text
         dialog = f"{history}{text}"
         self.history.text = dialog
+        self.history.set_bottom_text()
 
     def __del__(self):
         self.client.is_running = False
